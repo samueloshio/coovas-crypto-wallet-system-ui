@@ -2,33 +2,26 @@ import axios from 'axios';
 import Head from 'next/head';
 import React from 'react';
 import { useTranslation } from 'react-i18next';
-import { Inter } from 'next/font/google';
 import ComponentPicker from '@/components/ui/editor/ComponentPicker';
-import SiteHeader from '@/components/ui/SiteHeader';
 import Footer from '@/components/ui/Footer';
+import SiteHeader from '@/components/ui/SiteHeader';
 
-const inter = Inter({ subsets: ['latin'] });
-
-export default function Home({
-  pageData,
-  logo,
-  site,
-  mainMenu,
-  footerMenu,
-  apiUrl,
-  info,
+export default function Page({
+  pageData, logo, site, mainMenu, footerMenu, apiUrl, info
 }) {
   const { t } = useTranslation();
   return (
     <div>
       <Head>
         <title>
-          {pageData?.name || t('404 Not Found')} - {site?.param1}
+          {pageData?.name || t('404 Not Found')}
+          {' '}
+          -
+          {' '}
+          {site?.param1}
         </title>
-        Organie
-        <link rel='icon' href={`${apiUrl.param1}/public/${logo.param2}`} />
+        <link rel="icon" href={`${apiUrl.param1}/public/${logo.param2}`} />
       </Head>
-      <SiteHeader />
       <SiteHeader logo={logo} apiUrl={apiUrl} mainMenu={mainMenu} />
       {pageData?.content?.map((comp, index) => (
         <ComponentPicker
@@ -43,11 +36,17 @@ export default function Home({
   );
 }
 
-export async function getServerSideProps() {
+export async function getServerSideProps(context) {
+  const { slug } = context.params;
   const { data: pageData } = await axios.get(
-    'http://localhost:8888/home'
+    `http://localhost:8888/pages/${slug}`
   );
   const { data } = await axios.get('http://localhost:8888/info');
+  if (!pageData) {
+    return {
+      notFound: true,
+    };
+  }
   return {
     props: {
       pageData,
@@ -56,7 +55,7 @@ export async function getServerSideProps() {
       apiUrl: data?.apiUrl,
       mainMenu: JSON.parse(data.mainMenu.param1),
       footerMenu: JSON.parse(data.footerMenu.param1),
-      info: data,
-    },
+      info: data
+    }
   };
 }
